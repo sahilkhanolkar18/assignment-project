@@ -1,32 +1,74 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Stepper, Step, Button } from "@material-tailwind/react";
 import "react-phone-number-input/style.css";
 import PhoneInput from "react-phone-number-input";
+import { AuthContext } from "../../Context/AuthTokenContext";
 
-const Details = () => {
-  const [step, setStep] = useState(1);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [addressLine1, setAddressLine1] = useState("");
-  const [addressLine2, setAddressLine2] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [pincode, setPincode] = useState("");
-  const [country, setCountry] = useState("");
-  const [fileOne, setFileOne] = useState(null);
-  const [files, setFiles] = useState([]);
-  // const [geolocationStatus, setGeolocationStatus] = useState("");
-  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
-  const [latitude, setLatitude] = useState(null);
-  const [longitude, setLongitude] = useState(null);
+interface FormState {
+  step: number;
+  name: string;
+  email: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  fileOne: File | null;
+  files: File[];
+  isFormSubmitted: boolean;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+const Details: React.FC = () => {
+  const [formState, setFormState] = useState<FormState>({
+    step: 1,
+    name: "",
+    email: "",
+    phone: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    pincode: "",
+    country: "",
+    fileOne: null,
+    files: [],
+    isFormSubmitted: false,
+    latitude: null,
+    longitude: null,
+  });
+  const { authToken } = useContext(AuthContext);
+
+  const {
+    step,
+    name,
+    email,
+    phone,
+    addressLine1,
+    addressLine2,
+    city,
+    state,
+    pincode,
+    country,
+    fileOne,
+    files,
+    isFormSubmitted,
+    latitude,
+    longitude,
+  } = formState;
 
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLatitude(position.coords.latitude);
-          setLongitude(position.coords.longitude);
+          setFormState((prevState) => ({
+            ...prevState,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          }));
         },
         (error) => {
           console.log("Error getting geolocation:", error);
@@ -37,89 +79,93 @@ const Details = () => {
     }
   }, []);
 
-  // console.log({
-  //   step,
-  //   name,
-  //   email,
-  //   phone,
-  //   addressLine1,
-  //   addressLine2,
-  //   city,
-  //   state,
-  //   pincode,
-  //   country,
-  //   file,
-  //   files,
-  //   isFormSubmitted,
-  //   latitude,
-  //   longitude,
-  // });
-  const handleNext = () => {
-    setStep((prevStep) => prevStep + 1);
-    console.log({
-      step,
-      name,
-      email,
-      phone,
-      addressLine1,
-      addressLine2,
-      city,
-      state,
-      pincode,
-      country,
-      fileOne,
-      files,
-      isFormSubmitted,
-      latitude,
-      longitude,
-    });
+  const handleNext = (): void => {
+    setFormState((prevState) => ({
+      ...prevState,
+      step: prevState.step + 1,
+    }));
+    console.log(formState);
   };
 
-  const handlePrevious = () => {
-    setStep((prevStep) => prevStep - 1);
-
-    console.log({
-      step,
-      name,
-      email,
-      phone,
-      addressLine1,
-      addressLine2,
-      city,
-      state,
-      pincode,
-      country,
-      fileOne,
-      files,
-      isFormSubmitted,
-      latitude,
-      longitude,
-    });
+  const handlePrevious = (): void => {
+    setFormState((prevState) => ({
+      ...prevState,
+      step: prevState.step - 1,
+    }));
+    console.log(formState);
   };
-
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    setIsFormSubmitted(true);
-    console.log("subimited", {
-      step,
-      name,
-      email,
-      phone,
-      addressLine1,
-      addressLine2,
-      city,
-      state,
-      pincode,
-      country,
-      fileOne,
-      files,
-      isFormSubmitted,
-      latitude,
-      longitude,
+
+    const formPayload = {
+      id: 0,
+      created_at: "now",
+      name: formState.name,
+      email: formState.email,
+      phone_number: formState.phone,
+      address_1: formState.addressLine1,
+      address_2: formState.addressLine2,
+      city: formState.city,
+      state: formState.state,
+      pincode: parseInt(formState.pincode, 10),
+      country: formState.country,
+      geolocation: `${formState.latitude},${formState.longitude}`,
+      single_file: null,
+      multi_file: [],
+    };
+
+    if (formState.fileOne) {
+      formPayload.single_file = {
+        path: "",
+        name: formState.fileOne.name,
+        type: formState.fileOne.type,
+        size: formState.fileOne.size,
+        mime: "",
+        meta: {},
+        url: "",
+      };
+    }
+
+    formState.files.forEach((file) => {
+      formPayload.multi_file.push({
+        path: "",
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        mime: "",
+        meta: {},
+        url: "",
+      });
     });
+
+    try {
+      const response = await fetch(
+        "https://x8ki-letl-twmt.n7.xano.io/api:XooRuQbs/form",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            authToken: authToken,
+          },
+          body: JSON.stringify(formPayload),
+        }
+      );
+
+      if (response.ok) {
+        console.log("Form submitted successfully");
+        setFormState((prevState) => ({
+          ...prevState,
+          isFormSubmitted: true,
+        }));
+      } else {
+        console.log("Form submission failed");
+      }
+    } catch (error) {
+      console.log("Form submission error:", error);
+    }
   };
 
-  const renderStepContent = () => {
+  const renderStepContent = (): JSX.Element | null => {
     switch (step) {
       case 1:
         return (
@@ -128,29 +174,37 @@ const Details = () => {
               type="text"
               placeholder="Name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) =>
+                setFormState((prevState) => ({
+                  ...prevState,
+                  name: e.target.value,
+                }))
+              }
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="email"
               placeholder="Email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) =>
+                setFormState((prevState) => ({
+                  ...prevState,
+                  email: e.target.value,
+                }))
+              }
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
-            {/* <input
-              type="tel"
-              placeholder="Phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full px-4 py-2 mb-4 border rounded-lg"
-            /> */}
             <PhoneInput
               className="w-full px-4 py-2 mb-4 border rounded-lg"
               placeholder="Enter phone number"
               defaultCountry="IN"
               value={phone}
-              onChange={setPhone}
+              onChange={(value) =>
+                setFormState((prevState) => ({
+                  ...prevState,
+                  phone: value,
+                }))
+              }
             />
           </>
         );
@@ -161,42 +215,72 @@ const Details = () => {
               type="text"
               placeholder="Address Line 1"
               value={addressLine1}
-              onChange={(e) => setAddressLine1(e.target.value)}
+              onChange={(e) =>
+                setFormState((prevState) => ({
+                  ...prevState,
+                  addressLine1: e.target.value,
+                }))
+              }
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="text"
               placeholder="Address Line 2"
               value={addressLine2}
-              onChange={(e) => setAddressLine2(e.target.value)}
+              onChange={(e) =>
+                setFormState((prevState) => ({
+                  ...prevState,
+                  addressLine2: e.target.value,
+                }))
+              }
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="text"
               placeholder="City"
               value={city}
-              onChange={(e) => setCity(e.target.value)}
+              onChange={(e) =>
+                setFormState((prevState) => ({
+                  ...prevState,
+                  city: e.target.value,
+                }))
+              }
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="text"
               placeholder="State"
               value={state}
-              onChange={(e) => setState(e.target.value)}
+              onChange={(e) =>
+                setFormState((prevState) => ({
+                  ...prevState,
+                  state: e.target.value,
+                }))
+              }
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="number"
               placeholder="Pincode"
               value={pincode}
-              onChange={(e) => setPincode(e.target.value)}
+              onChange={(e) =>
+                setFormState((prevState) => ({
+                  ...prevState,
+                  pincode: e.target.value,
+                }))
+              }
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="text"
               placeholder="Country"
               value={country}
-              onChange={(e) => setCountry(e.target.value)}
+              onChange={(e) =>
+                setFormState((prevState) => ({
+                  ...prevState,
+                  country: e.target.value,
+                }))
+              }
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
           </>
@@ -212,7 +296,10 @@ const Details = () => {
               onChange={(e) => {
                 const selectedFile = e.target.files[0];
                 if (selectedFile) {
-                  setFileOne(selectedFile);
+                  setFormState((prevState) => ({
+                    ...prevState,
+                    fileOne: selectedFile,
+                  }));
                 }
               }}
               className="mb-4"
@@ -235,7 +322,10 @@ const Details = () => {
                   selectedFiles.length > 0 &&
                   selectedFiles.length <= 5
                 ) {
-                  setFiles(selectedFiles);
+                  setFormState((prevState) => ({
+                    ...prevState,
+                    files: Array.from(selectedFiles),
+                  }));
                 }
               }}
               className="mb-4"
