@@ -99,7 +99,6 @@ const Details = () => {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    // Perform form submission logic
     setIsFormSubmitted(true);
     console.log("subimited", {
       step,
@@ -292,7 +291,7 @@ const Details = () => {
                 Previous
               </Button>
             )}
-            {step !== 4 && step !== 5 && (
+            {step !== 5 && (
               <Button
                 color="blue"
                 onClick={handleNext}
@@ -301,11 +300,10 @@ const Details = () => {
                 Next
               </Button>
             )}
-            {step === 4 && (
+            {step === 5 && (
               <Button
                 type="submit"
                 color="blue"
-                onClick={handleNext}
                 className="px-4 py-2 text-white rounded-lg"
               >
                 Submit
