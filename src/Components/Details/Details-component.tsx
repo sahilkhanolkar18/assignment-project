@@ -2,7 +2,26 @@ import React, { useEffect, useState, useContext } from "react";
 import { Stepper, Step, Button } from "@material-tailwind/react";
 import "react-phone-number-input/style.css";
 import PhoneInput from "react-phone-number-input";
-import { AuthContext } from "../../Context/AuthTokenContext";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setStep,
+  setName,
+  setEmail,
+  setPhone,
+  setAddressLine1,
+  setAddressLine2,
+  setCity,
+  setState,
+  setPincode,
+  setCountry,
+  setFileOne,
+  setFiles,
+  setFormSubmitted,
+  setLatitude,
+  setLongitude,
+} from "../../store/detailsReducer";
+
+import { RootState } from "../../store/store";
 
 interface FormState {
   step: number;
@@ -23,24 +42,9 @@ interface FormState {
 }
 
 const Details: React.FC = () => {
-  const [formState, setFormState] = useState<FormState>({
-    step: 1,
-    name: "",
-    email: "",
-    phone: "",
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "",
-    pincode: "",
-    country: "",
-    fileOne: null,
-    files: [],
-    isFormSubmitted: false,
-    latitude: null,
-    longitude: null,
-  });
-  const { authToken } = useContext(AuthContext);
+  const authToken = useSelector((state: RootState) => state.auth);
+  const formState = useSelector((state: RootState) => state.details);
+  const dispatch = useDispatch();
 
   const {
     step,
@@ -80,20 +84,13 @@ const Details: React.FC = () => {
   }, []);
 
   const handleNext = (): void => {
-    setFormState((prevState) => ({
-      ...prevState,
-      step: prevState.step + 1,
-    }));
-    console.log(formState);
+    dispatch(setStep(formState.step + 1));
   };
 
   const handlePrevious = (): void => {
-    setFormState((prevState) => ({
-      ...prevState,
-      step: prevState.step - 1,
-    }));
-    console.log(formState);
+    dispatch(setStep(formState.step - 1));
   };
+
   const handleFormSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
 
@@ -153,10 +150,7 @@ const Details: React.FC = () => {
 
       if (response.ok) {
         console.log("Form submitted successfully");
-        setFormState((prevState) => ({
-          ...prevState,
-          isFormSubmitted: true,
-        }));
+        dispatch(setFormSubmitted(true));
       } else {
         console.log("Form submission failed");
       }
@@ -173,38 +167,23 @@ const Details: React.FC = () => {
             <input
               type="text"
               placeholder="Name"
-              value={name}
-              onChange={(e) =>
-                setFormState((prevState) => ({
-                  ...prevState,
-                  name: e.target.value,
-                }))
-              }
+              value={formState.name}
+              onChange={(e) => dispatch(setName(e.target.value))}
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="email"
               placeholder="Email"
-              value={email}
-              onChange={(e) =>
-                setFormState((prevState) => ({
-                  ...prevState,
-                  email: e.target.value,
-                }))
-              }
+              value={formState.email}
+              onChange={(e) => dispatch(setEmail(e.target.value))}
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <PhoneInput
               className="w-full px-4 py-2 mb-4 border rounded-lg"
               placeholder="Enter phone number"
               defaultCountry="IN"
-              value={phone}
-              onChange={(value) =>
-                setFormState((prevState) => ({
-                  ...prevState,
-                  phone: value,
-                }))
-              }
+              value={formState.phone}
+              onChange={(value) => dispatch(setPhone(value))}
             />
           </>
         );
@@ -214,73 +193,43 @@ const Details: React.FC = () => {
             <input
               type="text"
               placeholder="Address Line 1"
-              value={addressLine1}
-              onChange={(e) =>
-                setFormState((prevState) => ({
-                  ...prevState,
-                  addressLine1: e.target.value,
-                }))
-              }
+              value={formState.addressLine1}
+              onChange={(e) => dispatch(setAddressLine1(e.target.value))}
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="text"
               placeholder="Address Line 2"
-              value={addressLine2}
-              onChange={(e) =>
-                setFormState((prevState) => ({
-                  ...prevState,
-                  addressLine2: e.target.value,
-                }))
-              }
+              value={formState.addressLine2}
+              onChange={(e) => dispatch(setAddressLine2(e.target.value))}
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="text"
               placeholder="City"
-              value={city}
-              onChange={(e) =>
-                setFormState((prevState) => ({
-                  ...prevState,
-                  city: e.target.value,
-                }))
-              }
+              value={formState.city}
+              onChange={(e) => dispatch(setCity(e.target.value))}
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="text"
               placeholder="State"
-              value={state}
-              onChange={(e) =>
-                setFormState((prevState) => ({
-                  ...prevState,
-                  state: e.target.value,
-                }))
-              }
+              value={formState.state}
+              onChange={(e) => dispatch(setState(e.target.value))}
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="number"
               placeholder="Pincode"
-              value={pincode}
-              onChange={(e) =>
-                setFormState((prevState) => ({
-                  ...prevState,
-                  pincode: e.target.value,
-                }))
-              }
+              value={formState.pincode}
+              onChange={(e) => dispatch(setPincode(e.target.value))}
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
             <input
               type="text"
               placeholder="Country"
-              value={country}
-              onChange={(e) =>
-                setFormState((prevState) => ({
-                  ...prevState,
-                  country: e.target.value,
-                }))
-              }
+              value={formState.country}
+              onChange={(e) => dispatch(setCountry(e.target.value))}
               className="w-full px-4 py-2 mb-4 border rounded-lg"
             />
           </>
@@ -296,10 +245,7 @@ const Details: React.FC = () => {
               onChange={(e) => {
                 const selectedFile = e.target.files[0];
                 if (selectedFile) {
-                  setFormState((prevState) => ({
-                    ...prevState,
-                    fileOne: selectedFile,
-                  }));
+                  dispatch(setFileOne(selectedFile));
                 }
               }}
               className="mb-4"
@@ -322,10 +268,7 @@ const Details: React.FC = () => {
                   selectedFiles.length > 0 &&
                   selectedFiles.length <= 5
                 ) {
-                  setFormState((prevState) => ({
-                    ...prevState,
-                    files: Array.from(selectedFiles),
-                  }));
+                  dispatch(setFiles(Array.from(selectedFiles)));
                 }
               }}
               className="mb-4"

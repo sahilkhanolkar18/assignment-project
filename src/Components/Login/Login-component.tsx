@@ -1,26 +1,29 @@
-import { useState, useContext } from "react";
-import { Link } from "react-router-dom";
-import { AuthContext } from "../../Context/AuthTokenContext";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useContext, FormEvent, ChangeEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setAuthToken } from "../../store/authReducer";
 
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const { authToken, setToken } = useContext(AuthContext);
+interface LoginResponse {
+  authToken: string;
+}
+
+const Login: React.FC = () => {
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [loginError, setLoginError] = useState<string>("");
+  const dispatch = useDispatch();
+
   const navigate = useNavigate();
 
-  const handleOnSubmit = async (e) => {
+  const handleOnSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Create the request body
     const requestBody = {
       email: email,
       password: password,
     };
 
     try {
-      // Send the POST request
       const response = await fetch(
         "https://x8ki-letl-twmt.n7.xano.io/api:XooRuQbs/auth/login",
         {
@@ -32,24 +35,27 @@ const Login = () => {
         }
       );
 
-      // Check if the request was successful
       if (response.ok) {
-        // Process the response
-        const data = await response.json();
+        const data: LoginResponse = await response.json();
         console.log("Login successful:", data);
-        setToken(data.authToken);
-        // Handle successful login, e.g., redirect to another page
+        dispatch(setAuthToken(data.authToken));
         navigate("/details");
       } else {
-        // Handle error response
         console.error("Login failed:", response.status);
-        setLoginError("Login failed. Please check your credentials."); // Set login error message
+        setLoginError("Login failed. Please check your credentials.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setLoginError("An error occurred during login. Please try again."); // Set login error message
-      // Handle any network or other errors
+      setLoginError("An error occurred during login. Please try again.");
     }
+  };
+
+  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
   };
 
   return (
@@ -67,7 +73,7 @@ const Login = () => {
             placeholder="Email"
             className="w-full px-4 py-2 mb-4 border rounded-lg"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
           />
           <input
             type="password"
@@ -75,7 +81,7 @@ const Login = () => {
             placeholder="Password"
             className="w-full px-4 py-2 mb-4 border rounded-lg"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
           />
           <Link to="/forgot-password" className="text-blue-500">
             Forgot Password

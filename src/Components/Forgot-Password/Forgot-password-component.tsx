@@ -6,9 +6,6 @@ const ForgotPassword = () => {
 
   const handleOnSubmit = (e) => {
     e.preventDefault();
-    // Add your logic for handling the form submission here
-
-    // Simulating email sent
     setIsEmailSent(true);
   };
 
