@@ -243,8 +243,9 @@ const Details: React.FC = () => {
               type="file"
               accept=".png,.pdf"
               onChange={(e) => {
-                const selectedFile = e.target.files[0];
-                if (selectedFile) {
+                const selectedFiles = e.target.files;
+                if (selectedFiles && selectedFiles.length > 0) {
+                  const selectedFile = selectedFiles[0];
                   dispatch(setFileOne(selectedFile));
                 }
               }}
